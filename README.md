@@ -94,7 +94,7 @@ After you switch layout, SwapLayout can briefly show the layout flag **right nex
 
 ### Download
 
-Get **`SwapLayout-arm64.zip`** from the [Releases page of this fork](https://github.com/sergeykashin/RuSwitcher/releases/latest). Apple Silicon only (arm64), macOS 13+.
+Get **`SwapLayout-arm64.zip`** from the [Releases page of this fork](https://github.com/sergeykashin/SwapLayout/releases/latest). Apple Silicon only (arm64), macOS 13+.
 
 1. Unzip and move `SwapLayout.app` to `/Applications`.
 2. The build is **ad-hoc signed and not notarized**, so Gatekeeper blocks the first launch. Either run `xattr -dr com.apple.quarantine /Applications/SwapLayout.app`, or open *System Settings → Privacy & Security* and click *Open Anyway*.
@@ -110,9 +110,9 @@ Building from source instead:
 **Build from source (for macOS)**
 
 ```bash
-git clone https://github.com/sergeykashin/RuSwitcher.git
-cd RuSwitcher
-git checkout fix/hotkey-on-press
+git clone https://github.com/sergeykashin/SwapLayout.git
+cd SwapLayout
+git checkout swaplayout
 cd macos
 swift build -c release            # current architecture (arm64 on Apple Silicon)
 ```
@@ -250,7 +250,7 @@ SwapLayout работает через **Apple Screen Sharing**. Печатае�
 
 ### Скачать
 
-Скачайте **`SwapLayout-arm64.zip`** на [странице Releases этого форка](https://github.com/sergeykashin/RuSwitcher/releases/latest). Только Apple Silicon (arm64), macOS 13+.
+Скачайте **`SwapLayout-arm64.zip`** на [странице Releases этого форка](https://github.com/sergeykashin/SwapLayout/releases/latest). Только Apple Silicon (arm64), macOS 13+.
 
 1. Распакуйте и перенесите `SwapLayout.app` в `/Applications`.
 2. Сборка подписана **ad-hoc и не нотаризована**, поэтому Gatekeeper заблокирует первый запуск. Выполните `xattr -dr com.apple.quarantine /Applications/SwapLayout.app` либо откройте *Системные настройки → Конфиденциальность и безопасность* и нажмите *Всё равно открыть*.
@@ -266,9 +266,9 @@ SwapLayout работает через **Apple Screen Sharing**. Печатае�
 **Сборка из исходников**
 
 ```bash
-git clone https://github.com/sergeykashin/RuSwitcher.git
-cd RuSwitcher
-git checkout fix/hotkey-on-press
+git clone https://github.com/sergeykashin/SwapLayout.git
+cd SwapLayout
+git checkout swaplayout
 cd macos
 swift build -c release            # текущая архитектура (arm64 на Apple Silicon)
 ```
