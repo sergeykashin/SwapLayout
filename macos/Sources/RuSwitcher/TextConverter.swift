@@ -50,6 +50,17 @@ final class TextConverter {
         }
     }
 
+    /// В тексте есть и кириллические, и латинские буквы.
+    nonisolated static func hasMixedScripts(_ s: String) -> Bool {
+        var cyr = false, lat = false
+        for u in s.unicodeScalars {
+            if u.value >= 0x0400 && u.value <= 0x04FF { cyr = true }
+            else if (u.value >= 0x41 && u.value <= 0x5A) || (u.value >= 0x61 && u.value <= 0x7A) { lat = true }
+            if cyr && lat { return true }
+        }
+        return false
+    }
+
     /// NFC-нормализация перед вставкой — но НЕ для иврита/арабского: канонич. композиция
     /// может переставить/слить комбинирующие знаки (никуд/харакат), и число кодпоинтов
     /// разъедется со счётчиком Backspace/Shift-Left. Для RTL оставляем строку как есть.
@@ -119,7 +130,8 @@ final class TextConverter {
     /// Пустой typedSuffix означает «совпадает с passthroughSuffix».
     func convert(wordKeys: [TypedKey], prevWordKeys: [TypedKey], boundaryCount: Int,
                  passthroughSuffix: String = "", typedSuffix: String = "",
-                 convertedOverride: String? = nil) -> Bool {
+                 convertedOverride: String? = nil,
+                 onCommit: (() -> Void)? = nil) -> Bool {
         let keys: [TypedKey]
         let trailingSpaces: Int
         if !wordKeys.isEmpty {
@@ -160,6 +172,10 @@ final class TextConverter {
         lastUndoSwitchesLayout = true
         rslog("buffer convert: \(keys.count) keys (+\(passthroughSuffix.count) punct, +\(trailingSpaces) sp)")
 
+        // Текст уже посчитан по ТЕКУЩЕЙ раскладке, вставка идёт юникодом и от раскладки не
+        // зависит — переключаем сразу, до AX-запросов eraseBySelection, чтобы набор следом шёл
+        // уже в новой раскладке.
+        onCommit?()
         let bySelection = eraseBySelection(count: bsCount, insert: insert)
         // Инжект — вне main, чтобы usleep не голодал event tap.
         injectQueue.async { [weak self] in
@@ -691,12 +707,15 @@ final class TextConverter {
                 s.convertByText ? DynamicKeyMapping.convertBidirectional(text)
                 : s.smartConversion ? SmartConvert.selection(text)
                 : DynamicKeyMapping.convert(text))
-            // #46: «умная» не трогает верное слово, но одно слово человек выделил сам — переводим.
+            // #46: «умная» не трогает верное слово/акроним, но выделение человек сделал сам и
+            // явно нажал триггер — переводим целиком («Ai SDLC» ↔ «Фш ЫВДС»: 2-буквенное
+            // слово и ALL-CAPS умная оставляет). Если в выделении оба скрипта (латиница +
+            // кириллица, «iPhone стоит»), умная оставила его намеренно — не трогаем.
             // Перевод строки в тексте значит, что выделения не было: редактор на Cmd+C скопировал
             // всю строку. Без букв (3.14, $100) и вне текстового поля переводить нечего.
             if converted == text, !wholeLine, s.smartConversion, !s.convertByText,
                text.contains(where: { $0.isLetter }), !text.contains(where: { $0.isNewline }),
-               !text.trimmingCharacters(in: .whitespaces).contains(where: { $0.isWhitespace }),
+               !TextConverter.hasMixedScripts(text),
                editable || focusedRole() == nil {
                 converted = TextConverter.normalizedForInsert(DynamicKeyMapping.convertBidirectional(text))
             }

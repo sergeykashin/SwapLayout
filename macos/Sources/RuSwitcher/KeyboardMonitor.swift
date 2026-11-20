@@ -39,6 +39,18 @@ func rslog(_ msg: String) {
     }
 }
 
+/// Время события в секундах (монотонное). Берём момент нажатия клавиши, а не момент обработки:
+/// event tap живёт в главном потоке, и если тот занят (AX, usleep перепечатки), `Date()` в
+/// колбэке уже опоздал бы за окно тапа (0.4с) и тап терялся.
+private let rsTimebase: mach_timebase_info_data_t = {
+    var tb = mach_timebase_info_data_t(); mach_timebase_info(&tb); return tb
+}()
+func rsEventTime(_ event: CGEvent) -> TimeInterval {
+    let ts = event.timestamp
+    guard ts > 0 else { return ProcessInfo.processInfo.systemUptime }
+    return Double(ts) * Double(rsTimebase.numer) / Double(rsTimebase.denom) / 1_000_000_000
+}
+
 final class KeyboardMonitor: @unchecked Sendable {
     fileprivate var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -99,9 +111,11 @@ final class KeyboardMonitor: @unchecked Sendable {
 
     // Детект соло-тапа модификатора
     private var triggerArmed = false
-    private var triggerPressTime: Date?
+    /// Хоткей уже сработал на нажатии и модификатор(ы) ещё зажаты — повторно не стреляем.
+    private var triggerFired = false
+    private var triggerPressTime: TimeInterval?
     // Для двойного тапа
-    private var lastTapTime: Date?
+    private var lastTapTime: TimeInterval?
     private let tapWindow: TimeInterval = 0.4
     // issue #21: окно «тапа» для КОМБО из двух модификаторов. Намеренно большое: аккорд
     // из двух клавиш держат заметно дольше флика одной (0.4с было слишком узко). Но верхний
@@ -471,14 +485,14 @@ final class KeyboardMonitor: @unchecked Sendable {
     }
 
     /// Возвращает true, если событие надо «съесть» (только Caps Lock в consume-режиме).
-    fileprivate func handleFlagsChanged(flags: CGEventFlags, keyCode: UInt16) -> Bool {
-        handleHotkeyFlags(flags: flags, keyCode: keyCode)
+    fileprivate func handleFlagsChanged(flags: CGEventFlags, keyCode: UInt16, now: TimeInterval) -> Bool {
+        handleHotkeyFlags(flags: flags, keyCode: keyCode, now: now)
         switch triggerConfig.kind {
         case .capsLock:
             guard keyCode == KC.capsLock else { return false }
             // Caps Lock шлёт одно событие на нажатие. Используем как тап и съедаем,
             // чтобы не переключался регистр.
-            registerTap()
+            registerTap(now: now)
             return true
 
         case let .modifier(mask, left, right):
@@ -491,18 +505,21 @@ final class KeyboardMonitor: @unchecked Sendable {
 
             if flags.contains(mask) {
                 // нажатие: армим только если это нужная клавиша и нет других модификаторов
-                if accepted.contains(keyCode) && flags.intersection(otherMods).isEmpty {
-                    triggerArmed = true
-                    triggerPressTime = Date()
+                if triggerFired {
+                    triggerArmed = false   // второй флаг при зажатой клавише (другая сторона) — не новый тап
+                } else if accepted.contains(keyCode) && flags.intersection(otherMods).isEmpty {
+                    triggerFired = true
+                    // Срабатываем на НАЖАТИИ, а не на отпускании: при быстром наборе палец
+                    // уже жмёт следующую клавишу до отпускания модификатора, и тап терялся.
+                    triggerArmed = false
+                    triggerPressTime = nil
+                    registerTap(now: now)
                 } else {
                     triggerArmed = false  // не та сторона / комбо
                 }
             } else {
-                // отпускание: соло-тап нужной клавиши, быстро и без клавиш между
-                if triggerArmed, accepted.contains(keyCode), let t = triggerPressTime,
-                   Date().timeIntervalSince(t) < tapWindow {
-                    registerTap()
-                }
+                // отпускание: тап уже учтён на нажатии
+                triggerFired = false
                 triggerArmed = false
                 triggerPressTime = nil
             }
@@ -518,16 +535,16 @@ final class KeyboardMonitor: @unchecked Sendable {
             if !flags.intersection(release.subtracting(both)).isEmpty {
                 triggerArmed = false                 // зажат посторонний модификатор — не наш триггер
             } else if flags.contains(both) {
-                // ровно оба нужных, без посторонних (и без Fn) → армим
-                triggerArmed = flags.intersection(TriggerConfig.pressModifiers.subtracting(both)).isEmpty
-                triggerPressTime = triggerArmed ? Date() : nil
-            } else if flags.intersection(release).isEmpty {
-                // всё отпущено: комбо, если был армлен и без клавиш между (triggerArmed это
-                // гарантирует). Окно расширено 0.4→2с (comboTapWindow, issue #21), но потолок
-                // сохранён — не срабатывать на попутное удержание во время скролла/жеста.
-                if triggerArmed, let t = triggerPressTime, Date().timeIntervalSince(t) < comboTapWindow {
-                    registerTap()
+                // На нажатии второго модификатора комбо срабатывает сразу (см. одиночный выше).
+                let clean = flags.intersection(TriggerConfig.pressModifiers.subtracting(both)).isEmpty
+                triggerArmed = false
+                triggerPressTime = nil
+                if clean, !triggerFired {
+                    triggerFired = true
+                    registerTap(now: now)
                 }
+            } else if flags.intersection(release).isEmpty {
+                triggerFired = false   // всё отпущено — следующее нажатие снова сработает
                 triggerArmed = false
                 triggerPressTime = nil
             }
@@ -542,9 +559,9 @@ final class KeyboardMonitor: @unchecked Sendable {
 
     /// Дополнительные хоткеи параллельно триггеру. Каждый со своей машиной тапа; конфликты
     /// с триггером и между собой отсечены ещё в TriggerConfig.forSlot.
-    private func handleHotkeyFlags(flags: CGEventFlags, keyCode: UInt16) {
+    private func handleHotkeyFlags(flags: CGEventFlags, keyCode: UInt16, now: TimeInterval) {
         for slot in Array(detectors.keys) {
-            guard detectors[slot]?.handle(flags: flags, keyCode: keyCode, tapWindow: tapWindow,
+            guard detectors[slot]?.handle(flags: flags, keyCode: keyCode, now: now, tapWindow: tapWindow,
                                           comboTapWindow: comboTapWindow) == true else { continue }
             rslog("hotkey: \(slot.rawValue)")
             DispatchQueue.main.async { [weak self] in
@@ -562,13 +579,13 @@ final class KeyboardMonitor: @unchecked Sendable {
     }
 
     /// Учитывает одиночный/двойной тап и запускает конвертацию.
-    private func registerTap() {
+    private func registerTap(now: TimeInterval) {
         if triggerConfig.doubleTap {
-            if let last = lastTapTime, Date().timeIntervalSince(last) < tapWindow {
+            if let last = lastTapTime, now - last < tapWindow {
                 lastTapTime = nil
                 fireConversion()
             } else {
-                lastTapTime = Date()  // ждём второй тап
+                lastTapTime = now  // ждём второй тап
             }
         } else {
             fireConversion()
@@ -650,7 +667,7 @@ private func keyboardCallback(
         monitor.handleKeyDown(keyCode: keyCode, flags: event.flags, char: forwardedChar)
     } else if type == .flagsChanged {
         let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-        if monitor.handleFlagsChanged(flags: event.flags, keyCode: keyCode) {
+        if monitor.handleFlagsChanged(flags: event.flags, keyCode: keyCode, now: rsEventTime(event)) {
             return nil  // съедаем Caps Lock, чтобы не переключался регистр
         }
     } else if type == .keyUp {

@@ -128,8 +128,10 @@ struct TriggerConfig {
 struct TapDetector {
     let config: TriggerConfig
     private var armed = false
-    private var pressTime: Date?
-    private var lastTapTime: Date?
+    /// Уже сработал на нажатии, модификаторы ещё зажаты.
+    private var fired = false
+    private var pressTime: TimeInterval?
+    private var lastTapTime: TimeInterval?
 
     init(config: TriggerConfig) { self.config = config }
 
@@ -139,7 +141,7 @@ struct TapDetector {
     }
 
     /// true — хоткей сработал (с учётом двойного тапа).
-    mutating func handle(flags: CGEventFlags, keyCode: UInt16, tapWindow: TimeInterval, comboTapWindow: TimeInterval) -> Bool {
+    mutating func handle(flags: CGEventFlags, keyCode: UInt16, now: TimeInterval, tapWindow: TimeInterval, comboTapWindow: TimeInterval) -> Bool {
         if keyCode == KC.function, !config.usesFn {
             armed = false
             pressTime = nil
@@ -153,39 +155,35 @@ struct TapDetector {
         case let .modifier(mask, left, right):
             let accepted = config.accepted(left: left, right: right)
             if flags.contains(mask) {
-                armed = accepted.contains(keyCode) && flags.intersection(TriggerConfig.pressModifiers.subtracting(mask)).isEmpty
-                pressTime = armed ? Date() : nil
-            } else {
-                if armed, accepted.contains(keyCode), let t = pressTime, Date().timeIntervalSince(t) < tapWindow {
+                // Срабатываем на нажатии (см. KeyboardMonitor.handleFlagsChanged).
+                if !fired, accepted.contains(keyCode),
+                   flags.intersection(TriggerConfig.pressModifiers.subtracting(mask)).isEmpty {
                     tapped = true
+                    fired = true
                 }
-                armed = false
-                pressTime = nil
+            } else {
+                fired = false
             }
         case let .combo(maskA, maskB):
             let both: CGEventFlags = [maskA, maskB]
             if !flags.intersection(release.subtracting(both)).isEmpty {
-                armed = false
+                // посторонний модификатор — не наш хоткей
             } else if flags.contains(both) {
-                armed = flags.intersection(TriggerConfig.pressModifiers.subtracting(both)).isEmpty
-                pressTime = armed ? Date() : nil
-            } else if flags.intersection(release).isEmpty {
-                // issue #21: окно комбо шире (аккорд держат дольше флика), но с потолком —
-                // не срабатывать на попутное удержание во время скролла/жеста.
-                if armed, let t = pressTime, Date().timeIntervalSince(t) < comboTapWindow {
+                if !fired, flags.intersection(TriggerConfig.pressModifiers.subtracting(both)).isEmpty {
                     tapped = true
+                    fired = true
                 }
-                armed = false
-                pressTime = nil
+            } else if flags.intersection(release).isEmpty {
+                fired = false
             }
         }
         guard tapped else { return false }
         guard config.doubleTap else { return true }
-        if let last = lastTapTime, Date().timeIntervalSince(last) < tapWindow {
+        if let last = lastTapTime, now - last < tapWindow {
             lastTapTime = nil
             return true
         }
-        lastTapTime = Date()
+        lastTapTime = now
         return false
     }
 }

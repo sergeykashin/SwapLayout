@@ -439,9 +439,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let keys = self.keyboardMonitor.currentWordKeys
                 let prevKeys = self.keyboardMonitor.prevWordKeys
                 let bc = self.keyboardMonitor.boundaryCount
-                if self.textConverter.convert(wordKeys: keys, prevWordKeys: prevKeys, boundaryCount: bc) {
+                var switched = false
+                if self.textConverter.convert(wordKeys: keys, prevWordKeys: prevKeys, boundaryCount: bc,
+                                              onCommit: { LayoutSwitcher.switchToOpposite(); switched = true }) {
                     self.keyboardMonitor.markConverted()
-                    LayoutSwitcher.switchToOpposite()
+                    if !switched { LayoutSwitcher.switchToOpposite() }
                     self.updateStatusIcon()
                     self.lastAutoConverted = nil
                 }
