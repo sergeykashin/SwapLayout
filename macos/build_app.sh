@@ -2,8 +2,9 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_NAME="RuSwitcher"
-APP_BUNDLE="$PROJECT_DIR/$APP_NAME.app"
+APP_NAME="RuSwitcher"          # имя продукта SwiftPM (внутреннее)
+BUNDLE_NAME="SwapLayout"     # имя приложения (форк: другое имя и иконка, см. TRADEMARKS.md)
+APP_BUNDLE="$PROJECT_DIR/$BUNDLE_NAME.app"
 # version.json живёт в КОРНЕ репозитория (живой фид обновлений) — не переносить!
 # RS_VERSION_JSON переопределяет источник версии (для бета-сборок → version-beta.json).
 VERSION_JSON="${RS_VERSION_JSON:-$PROJECT_DIR/../version.json}"
@@ -45,10 +46,10 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 # 3. Копируем бинарник
-cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+cp "$BUILD_DIR/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/$BUNDLE_NAME"
 
 # 3a. Самопроверка: бинарь обязан быть universal (arm64 + x86_64), иначе Intel-маки не запустят
-ARCHS=$(lipo -archs "$APP_BUNDLE/Contents/MacOS/$APP_NAME")
+ARCHS=$(lipo -archs "$APP_BUNDLE/Contents/MacOS/$BUNDLE_NAME")
 if [[ "$ARCHS" != *"arm64"* || "$ARCHS" != *"x86_64"* ]]; then
     echo "ERROR: бинарь не universal (получено: $ARCHS)"; exit 1
 fi

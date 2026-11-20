@@ -1,44 +1,26 @@
-# RuSwitcher
+# SwapLayout
 
-<p align="center">
-  <img src="macos/icon.png" width="128" alt="RuSwitcher icon">
-</p>
+> **SwapLayout is an unofficial fork of [RuSwitcher](https://github.com/rashn/RuSwitcher)** (MIT) by rashn — a different app with its own name and icon, built from the original's source — it is **not** the official app and has no affiliation with its author. The official app, website, Homebrew cask and update feed belong to the original project. This fork is distributed as **source code only**: build it yourself (see *Installation*).
+>
+> **SwapLayout — неофициальный форк [RuSwitcher](https://github.com/rashn/RuSwitcher)** (MIT) автора rashn: отдельное приложение со своим именем и иконкой, собрано из исходников оригинала — не официальное приложение и не связан с автором оригинала. Официальные сборки, сайт, Homebrew и ленту обновлений ведёт оригинальный проект. Форк распространяется **только как исходный код**: соберите его сами (см. «Установка»).
 
-<p align="center">
-  <b>Lightweight keyboard layout switcher for macOS</b><br>
-  Free and open-source alternative to PuntoSwitcher
-</p>
+### What is different in this fork / Чем отличается форк
 
-<p align="center">
-  <sub>macOS app lives in <a href="macos/">macos/</a> · Windows version is <a href="windows/">planned</a> · cross-platform behaviour contract in <a href="shared/">shared/</a></sub>
-</p>
+- **Hotkeys fire on key press**, not on release — fast typing right after the hotkey no longer cancels it (e.g. Option+Shift, the Windows-style layout switch, works the same on the Mac, in RDP and in Parallels). Trade-off: modifier-only hotkeys now also fire inside ordinary shortcuts such as ⌘⇧4.
+- **Tap timing uses the event's own timestamp** — a busy main thread can no longer push a tap out of its time window.
+- **The layout switches earlier** during a manual conversion, before the Accessibility checks and the retype.
+- **Selection + trigger flips the whole selection** when smart conversion changed nothing (e.g. `Ai SDLC` ↔ `Фш ЫВДС`); mixed-script selections like `iPhone стоит` are still left alone.
 
-<p align="center">
-  <a href="https://ruswitcher.app/?utm_source=github&utm_medium=readme"><img src="https://img.shields.io/badge/website-ruswitcher.app-2A5EC7?style=flat-square" alt="Website: ruswitcher.app"></a>
-  <a href="https://github.com/rashn/RuSwitcher/releases/latest"><img src="https://img.shields.io/github/v/release/rashn/RuSwitcher?style=flat-square" alt="Release"></a>
-  <a href="https://formulae.brew.sh/cask/ruswitcher"><img src="https://img.shields.io/homebrew/cask/v/ruswitcher?style=flat-square&label=homebrew" alt="Homebrew Cask"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/rashn/RuSwitcher?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/macOS-13%2B-blue?style=flat-square" alt="macOS 13+">
-  <img src="https://img.shields.io/badge/Swift-6-orange?style=flat-square" alt="Swift 6">
-</p>
+Подробности и причины: [HOTKEY_NOTES.md](HOTKEY_NOTES.md) · Details and root causes: [HOTKEY_NOTES.md](HOTKEY_NOTES.md).
 
-<p align="center">
-  <a href="#english">English</a> · <a href="#русский">Русский</a>
-</p>
-
-<p align="center">
-  <a href="https://ruswitcher.app/en/download/?utm_source=github&utm_medium=readme"><b>⬇️ Download for macOS</b></a>
-  &nbsp;·&nbsp;
-  <a href="https://ruswitcher.app/download/?utm_source=github&utm_medium=readme">Скачать для macOS</a>
-  &nbsp;·&nbsp;
-  Homebrew: <code>brew install --cask ruswitcher</code>
-</p>
+> ℹ️ The original's update feed is **disabled** in this fork: "Check for updates" just opens this repository's releases, and the app never installs the official build over itself. Update by pulling and rebuilding.
+> ℹ️ Лента обновлений оригинала в форке **отключена**: «Проверить обновления» просто открывает релизы этого репозитория и не ставит поверх официальную сборку. Обновление — `git pull` и пересборка.
 
 ---
 
 ## English
 
-Typed `ghbdtn` when you meant `привет`? Just tap **Option ⌥** and RuSwitcher converts the last word into the right layout — typing it directly, no copy-paste. Works with any pair of installed keyboard layouts — Russian, Ukrainian, Belarusian, German, French, and more. The trigger is fully configurable (a single key or a two-key combo), it can also fix the layout **automatically as you type**, and it even works through **Apple Screen Sharing**.
+Typed `ghbdtn` when you meant `привет`? Just tap **Option ⌥** and SwapLayout converts the last word into the right layout — typing it directly, no copy-paste. Works with any pair of installed keyboard layouts — Russian, Ukrainian, Belarusian, German, French, and more. The trigger is fully configurable (a single key or a two-key combo), it can also fix the layout **automatically as you type**, and it even works through **Apple Screen Sharing**.
 
 ### How it works
 
@@ -52,22 +34,22 @@ The trigger is configurable — **Option**, **Command**, **Control** or **Shift*
 
 ### Automatic conversion (beta)
 
-RuSwitcher can also fix the layout **automatically as you type**, with no key press. Turn it on in **Settings → Auto-conversion** (off by default). When you finish a word (space), it checks the word against the macOS system dictionary and — only when confident — converts it and switches the layout for you.
+SwapLayout can also fix the layout **automatically as you type**, with no key press. Turn it on in **Settings → Auto-conversion** (off by default). When you finish a word (space), it checks the word against the macOS system dictionary and — only when confident — converts it and switches the layout for you.
 
 Words with trailing punctuation are handled too *(new in 2.7.0)*: `ghbdtn,` becomes `привет,` — the punctuation stays exactly as typed. Genuinely ambiguous tails are left alone on purpose: on the Russian layout the EN keys `. , ; :` are the letters `ю б ж Ж`, so `levf.` could mean either «думаю» or «дума.» — such words are yours to convert with the manual trigger.
 
 Precision-first: to avoid false fixes it deliberately **skips** short words (< 3 letters), words with digits / URLs / punctuation in the middle, ALL-CAPS acronyms typed with Shift, camelCase / mixed-script code identifiers, terminals / IDEs / password managers, and password fields. It targets layout pairs that have a macOS system dictionary (English ↔ Russian / Ukrainian / German / French… are reliable); languages without one (Belarusian, Armenian, Georgian) keep using the manual trigger.
 
-Because the check relies on the **macOS system dictionary** — which is less complete than the real vocabulary of the languages it converts — some compound, rare or slang words won't auto-convert on their own. That's exactly what the built-in exception lists are for: add words you type often to **Always convert** (or **Never convert**) and RuSwitcher will handle them the way you want, no dictionary needed.
+Because the check relies on the **macOS system dictionary** — which is less complete than the real vocabulary of the languages it converts — some compound, rare or slang words won't auto-convert on their own. That's exactly what the built-in exception lists are for: add words you type often to **Always convert** (or **Never convert**) and SwapLayout will handle them the way you want, no dictionary needed.
 
 **Three exception lists** let you tune it (Settings → Auto-conversion):
 - **Apps** — where auto-conversion stays off (terminals, IDEs and password managers are pre-filled; password managers can't be removed).
-- **Never convert** — words it must never touch (nicknames, logins, brands). After a wrong fix, tap the trigger to undo and RuSwitcher offers to add the word here.
+- **Never convert** — words it must never touch (nicknames, logins, brands). After a wrong fix, tap the trigger to undo and SwapLayout offers to add the word here.
 - **Always convert** — words to always fix even if they aren't in the dictionary (compound words, slang). Add the **target** word — the result you want.
 
 ### Hebrew — right-to-left, experimental (new in 3.0)
 
-RuSwitcher's **first right-to-left layout**. Any layout pair involving Hebrew now converts: typed `akuo` in the wrong layout? One tap makes it `שלום`, in either direction, with any second layout. Because conversion is keycode-based, right-to-left text is handled safely and niqqud marks are never reordered.
+SwapLayout's **first right-to-left layout**. Any layout pair involving Hebrew now converts: typed `akuo` in the wrong layout? One tap makes it `שלום`, in either direction, with any second layout. Because conversion is keycode-based, right-to-left text is handled safely and niqqud marks are never reordered.
 
 **Automatic conversion for Hebrew pairs is deliberately conservative** — the macOS Hebrew dictionary accepts any letter sequence, so auto only fires on a positive signal (you typed in Hebrew but the word is a real word of your other layout's language). The reverse direction is left to the manual trigger — no corrupted words. This is a new, experimental feature; **the interface itself is not yet localized into Hebrew (RTL UI is planned separately)**, and reports from Hebrew typists are very welcome.
 
@@ -77,11 +59,11 @@ Besides the conversion trigger, you can set a **second hotkey that only switches
 
 ### Remote desktop (beta — new in 2.5)
 
-RuSwitcher works through **Apple Screen Sharing**. Type into a remote Mac's session and fix wrong-layout text right there — by trigger or automatically — just like on your local machine. Run RuSwitcher on **both** Macs and turn on **Remote Desktop mode** (beta, marked in the menu). Conversion happens on the Mac you're controlling, where the text actually lives.
+SwapLayout works through **Apple Screen Sharing**. Type into a remote Mac's session and fix wrong-layout text right there — by trigger or automatically — just like on your local machine. Run SwapLayout on **both** Macs and turn on **Remote Desktop mode** (beta, marked in the menu). Conversion happens on the Mac you're controlling, where the text actually lives.
 
 ### Layout flag at the cursor (beta — new in 2.6)
 
-After you switch layout, RuSwitcher can briefly show the layout flag **right next to the text cursor** — so you see which layout you're in without glancing at the menu bar. It hides as you start typing. Turn it on in the menu or Settings (off by default). It works wherever the app exposes the cursor position via Accessibility (native apps and most text fields); a few apps that draw their own text (e.g. the VS Code editor) don't expose it — there macOS's own input indicator covers the gap.
+After you switch layout, SwapLayout can briefly show the layout flag **right next to the text cursor** — so you see which layout you're in without glancing at the menu bar. It hides as you start typing. Turn it on in the menu or Settings (off by default). It works wherever the app exposes the cursor position via Accessibility (native apps and most text fields); a few apps that draw their own text (e.g. the VS Code editor) don't expose it — there macOS's own input indicator covers the gap.
 
 ### Features
 
@@ -112,34 +94,27 @@ After you switch layout, RuSwitcher can briefly show the layout flag **right nex
 
 ### Installation
 
-**Homebrew (recommended)**
-
-RuSwitcher is in the official [Homebrew](https://brew.sh) catalog — no tap needed:
-
-```bash
-brew install --cask ruswitcher
-```
-
-To upgrade later: `brew upgrade --cask ruswitcher`.
-
-**Download DMG**
-
-Grab the latest `.dmg` from [**ruswitcher.app**](https://ruswitcher.app/en/download/?utm_source=github&utm_medium=readme) or from [**Releases**](https://github.com/rashn/RuSwitcher/releases/latest), open it and drag RuSwitcher to Applications.
+There are no prebuilt binaries for this fork. The official app is published only by the original project (see its [website and Releases](https://github.com/rashn/RuSwitcher/releases)) — **do not use the official Homebrew cask or DMG if you want this fork's behaviour**, they install the original build.
 
 **Build from source (for macOS)**
 
 ```bash
-git clone https://github.com/rashn/RuSwitcher.git
+git clone https://github.com/sergeykashin/RuSwitcher.git
 cd RuSwitcher
-RS_SIGN_ID="-" ./macos/build_app.sh
-cp -R macos/RuSwitcher.app /Applications/
+git checkout fix/hotkey-on-press
+cd macos
+swift build -c release            # current architecture (arm64 on Apple Silicon)
 ```
+
+`build_app.sh` builds a **universal** binary, which needs the full Xcode (`xcbuild`) and signs with the original author's Developer ID. For a local build either run it as `RS_SIGN_ID="-" ./build_app.sh` with Xcode selected, or use `swift build` as above and assemble the bundle yourself (copy the binary, `Info.plist`, `RuSwitcher.icns`, then `codesign --force --deep --sign - --entitlements RuSwitcher.entitlements`). With the Xcode toolchain the stricter compiler may reject some existing code; the Command Line Tools toolchain builds it.
+
+An ad-hoc signed build has a different signature from the official app, so macOS asks for **Accessibility** and **Input Monitoring** again. Quit the official app before running this one — two event taps conflict.
 
 Requires macOS 13+ and Xcode Command Line Tools.
 
 ### Permissions
 
-On first launch, RuSwitcher requests two macOS permissions:
+On first launch, SwapLayout requests two macOS permissions:
 
 1. **Accessibility** — to read and modify text in applications.
 2. **Input Monitoring** — to detect keyboard events.
@@ -169,9 +144,9 @@ The menu-bar menu also has quick toggles for Automatic conversion, Layout sound,
 
 ### Support the project
 
-If you find RuSwitcher useful:
+If you find SwapLayout useful, support the **original author** (not this fork):
 
-- [**Boosty**](https://boosty.to/ruswitcher) — donate
+- [**Boosty**](https://boosty.to/ruswitcher) — donate to the original project
 - **Star** this repo on GitHub
 
 ### Code signing
@@ -180,7 +155,7 @@ Free code signing on Windows provided by [SignPath.io](https://about.signpath.io
 
 ### License
 
-[MIT](LICENSE) — free to use, modify, and distribute. The license covers the code; the RuSwitcher name and icon are not part of it, see [TRADEMARKS.md](TRADEMARKS.md).
+[MIT](LICENSE) — free to use, modify, and distribute. The license covers the code; the SwapLayout name and icon are not part of it, see [TRADEMARKS.md](TRADEMARKS.md).
 
 App icon designed by [kutawhat](https://github.com/kutawhat).
 
@@ -190,7 +165,7 @@ Word lists (the downloadable dictionaries and the built-in list of common Hebrew
 
 ## Русский
 
-Набрали `ghbdtn` вместо `привет`? Просто нажмите **Option ⌥** — и RuSwitcher сконвертирует последнее слово в правильную раскладку, печатая его напрямую, без копипасты. Работает с любой парой установленных раскладок — русская, украинская, белорусская, немецкая, французская и другие. Триггер настраивается (одна клавиша или комбо из двух), есть **автоматическая конверсия по ходу набора**, и всё это работает даже через **Apple Screen Sharing**.
+Набрали `ghbdtn` вместо `привет`? Просто нажмите **Option ⌥** — и SwapLayout сконвертирует последнее слово в правильную раскладку, печатая его напрямую, без копипасты. Работает с любой парой установленных раскладок — русская, украинская, белорусская, немецкая, французская и другие. Триггер настраивается (одна клавиша или комбо из двух), есть **автоматическая конверсия по ходу набора**, и всё это работает даже через **Apple Screen Sharing**.
 
 ### Как работает
 
@@ -204,17 +179,17 @@ Word lists (the downloadable dictionaries and the built-in list of common Hebrew
 
 ### Автоматическая конверсия (бета)
 
-RuSwitcher умеет исправлять раскладку **автоматически по ходу набора**, без нажатий. Включается в **Настройки → Автоконверсия** (по умолчанию выключено). Когда вы заканчиваете слово (пробел), приложение сверяет его с системным словарём macOS и — только при уверенности — конвертирует и само переключает раскладку.
+SwapLayout умеет исправлять раскладку **автоматически по ходу набора**, без нажатий. Включается в **Настройки → Автоконверсия** (по умолчанию выключено). Когда вы заканчиваете слово (пробел), приложение сверяет его с системным словарём macOS и — только при уверенности — конвертирует и само переключает раскладку.
 
 Слова с прилипшим знаком препинания тоже обрабатываются *(новое в 2.7.0)*: `ghbdtn,` превратится в `привет,` — знак останется ровно как набран. По-настоящему неоднозначные хвосты не трогаем сознательно: клавиши `. , ; :` английской раскладки — это буквы `ю б ж Ж` в ЙЦУКЕН, так что `levf.` может означать и «думаю», и «дума.» — такие слова конвертируйте ручным триггером.
 
 Точность важнее полноты: чтобы не сработать зря, авто-конверсия намеренно **пропускает** короткие слова (< 3 букв), слова с цифрами / URL / пунктуацией в середине, акронимы капсом через Shift, camelCase / смешанные алфавиты (идентификаторы кода), терминалы / IDE / менеджеры паролей и поля паролей. Работает для пар раскладок, у которых есть системный словарь macOS (английский ↔ русский / украинский / немецкий / французский… — надёжно); для языков без словаря (белорусский, армянский, грузинский) остаётся ручной триггер.
 
-Поскольку проверка опирается на **системный словарь macOS** — а он не так богат, как реальный словарный запас конвертируемых языков — некоторые составные, редкие или сленговые слова сами не сконвертируются. Ровно для этого и нужны встроенные списки исключений: часто используемые слова добавляйте в **«Всегда конвертировать»** (или **«Никогда не конвертировать»**), и RuSwitcher будет обрабатывать их как вам нужно, без словаря.
+Поскольку проверка опирается на **системный словарь macOS** — а он не так богат, как реальный словарный запас конвертируемых языков — некоторые составные, редкие или сленговые слова сами не сконвертируются. Ровно для этого и нужны встроенные списки исключений: часто используемые слова добавляйте в **«Всегда конвертировать»** (или **«Никогда не конвертировать»**), и SwapLayout будет обрабатывать их как вам нужно, без словаря.
 
 **Три списка исключений** для тонкой настройки (Настройки → Автоконверсия):
 - **Приложения** — где авто-конверсия выключена (терминалы, IDE, менеджеры паролей уже в списке; менеджеры паролей удалить нельзя).
-- **Никогда не конвертировать** — слова, которые трогать нельзя (ники, логины, бренды). После ошибочной замены нажмите триггер для отмены — RuSwitcher предложит добавить слово сюда.
+- **Никогда не конвертировать** — слова, которые трогать нельзя (ники, логины, бренды). После ошибочной замены нажмите триггер для отмены — SwapLayout предложит добавить слово сюда.
 - **Всегда конвертировать** — слова, которые исправлять всегда, даже если их нет в словаре (составные слова, сленг). Добавляйте **целевое** слово — то, что должно получиться.
 
 ### Иврит — справа налево, экспериментально (новое в 3.0)
@@ -229,11 +204,11 @@ RuSwitcher умеет исправлять раскладку **автомати
 
 ### Режим удалённого стола (бета — новое в 2.5)
 
-RuSwitcher работает через **Apple Screen Sharing**. Печатаете в сессии удалённого Mac — и неправильная раскладка исправляется прямо там, по триггеру или автоматически, как на локальной машине. Запустите RuSwitcher на **обеих** машинах и включите **Режим удалённого стола** (бета, помечен в меню). Конверсия происходит на управляемой машине, где и находится текст.
+SwapLayout работает через **Apple Screen Sharing**. Печатаете в сессии удалённого Mac — и неправильная раскладка исправляется прямо там, по триггеру или автоматически, как на локальной машине. Запустите SwapLayout на **обеих** машинах и включите **Режим удалённого стола** (бета, помечен в меню). Конверсия происходит на управляемой машине, где и находится текст.
 
 ### Флаг у курсора (бета — новое в 2.6)
 
-После переключения раскладки RuSwitcher может ненадолго показать флаг раскладки **прямо у текстового курсора** — видно, в какой раскладке печатаете, не глядя в меню-бар. Прячется, как только начинаете печатать. Включается в меню или Настройках (по умолчанию выключено). Работает там, где приложение отдаёт позицию курсора через Accessibility (нативные приложения и большинство текстовых полей); некоторые приложения, рисующие текст сами (например, редактор VS Code), позицию не отдают — там раскладку показывает встроенный индикатор macOS.
+После переключения раскладки SwapLayout может ненадолго показать флаг раскладки **прямо у текстового курсора** — видно, в какой раскладке печатаете, не глядя в меню-бар. Прячется, как только начинаете печатать. Включается в меню или Настройках (по умолчанию выключено). Работает там, где приложение отдаёт позицию курсора через Accessibility (нативные приложения и большинство текстовых полей); некоторые приложения, рисующие текст сами (например, редактор VS Code), позицию не отдают — там раскладку показывает встроенный индикатор macOS.
 
 ### Возможности
 
@@ -264,34 +239,27 @@ RuSwitcher работает через **Apple Screen Sharing**. Печатае�
 
 ### Установка
 
-**Homebrew (рекомендуется)**
-
-RuSwitcher есть в официальном каталоге [Homebrew](https://brew.sh) — tap больше не нужен:
-
-```bash
-brew install --cask ruswitcher
-```
-
-Для обновления: `brew upgrade --cask ruswitcher`.
-
-**Скачать DMG**
-
-Скачайте последний `.dmg` с сайта [**ruswitcher.app**](https://ruswitcher.app/download/?utm_source=github&utm_medium=readme) или со страницы [**Releases**](https://github.com/rashn/RuSwitcher/releases/latest), откройте и перетащите RuSwitcher в "Программы".
+Готовых сборок у этого форка нет. Официальное приложение выпускает только оригинальный проект (см. его [сайт и Releases](https://github.com/rashn/RuSwitcher/releases)) — **не ставьте официальный Homebrew-cask или DMG, если нужно поведение форка**: они установят оригинальную сборку.
 
 **Сборка из исходников**
 
 ```bash
-git clone https://github.com/rashn/RuSwitcher.git
+git clone https://github.com/sergeykashin/RuSwitcher.git
 cd RuSwitcher
-bash build_app.sh
-cp -R RuSwitcher.app /Applications/
+git checkout fix/hotkey-on-press
+cd macos
+swift build -c release            # текущая архитектура (arm64 на Apple Silicon)
 ```
+
+`build_app.sh` собирает **universal**-бинарь, для чего нужен полный Xcode (`xcbuild`), и подписывает Developer ID автора оригинала. Для локальной сборки либо запустите `RS_SIGN_ID="-" ./build_app.sh` с выбранным Xcode, либо соберите через `swift build` и оформите бандл вручную (бинарь, `Info.plist`, `RuSwitcher.icns`, затем `codesign --force --deep --sign - --entitlements RuSwitcher.entitlements`). Компилятор из Xcode строже и может отвергнуть часть существующего кода; тулчейн Command Line Tools собирает без проблем.
+
+Сборка с ad-hoc подписью отличается от подписи официального приложения, поэтому macOS снова запросит **Универсальный доступ** и **Мониторинг ввода**. Перед запуском закройте официальное приложение — два event tap конфликтуют.
 
 Требуется macOS 13+ и Xcode Command Line Tools.
 
 ### Разрешения
 
-При первом запуске RuSwitcher запросит два системных разрешения macOS:
+При первом запуске SwapLayout запросит два системных разрешения macOS:
 
 1. **Универсальный доступ (Accessibility)** — для чтения и изменения текста в приложениях.
 2. **Мониторинг ввода (Input Monitoring)** — для отслеживания нажатий клавиш.
@@ -321,9 +289,9 @@ cp -R RuSwitcher.app /Applications/
 
 ### Поддержать проект
 
-Если RuSwitcher вам полезен:
+Если SwapLayout вам полезен, поддержите **автора оригинала** (не этот форк):
 
-- [**Boosty**](https://boosty.to/ruswitcher) — донат
+- [**Boosty**](https://boosty.to/ruswitcher) — донат оригинальному проекту
 - **Star** на GitHub
 
 ### Подпись кода
@@ -332,7 +300,7 @@ cp -R RuSwitcher.app /Applications/
 
 ### Лицензия
 
-[MIT](LICENSE) — свободное использование, модификация и распространение. Лицензия относится к коду: название RuSwitcher и иконка в неё не входят, см. [TRADEMARKS.md](TRADEMARKS.md).
+[MIT](LICENSE) — свободное использование, модификация и распространение. Лицензия относится к коду: название SwapLayout и иконка в неё не входят, см. [TRADEMARKS.md](TRADEMARKS.md).
 
 Иконку приложения нарисовал [kutawhat](https://github.com/kutawhat).
 

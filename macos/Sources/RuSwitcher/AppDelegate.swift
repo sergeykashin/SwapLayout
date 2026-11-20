@@ -299,7 +299,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Сбрасывает старые записи разрешений для нашего bundle ID
     private func resetPermissions() {
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.ruswitcher.app"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.swaplayout.app"
         rslog("Resetting TCC entries for \(bundleID)")
 
         for service in ["Accessibility", "ListenEvent"] {
@@ -1020,7 +1020,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Строка версии (с dev-меткой для непубликуемых сборок) — чтобы было видно, какой билд.
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let devTag = Bundle.main.infoDictionary?["RSDevTag"] as? String ?? ""
-        let verItem = NSMenuItem(title: "RuSwitcher \(ver)\(devTag)", action: nil, keyEquivalent: "")
+        let verItem = NSMenuItem(title: "SwapLayout \(ver)\(devTag)", action: nil, keyEquivalent: "")
         verItem.isEnabled = false
         menu.addItem(verItem)
         let missingItem = NSMenuItem(title: L10n.menuPermissionsMissing, action: #selector(recheckPermissions), keyEquivalent: "")
@@ -1469,7 +1469,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             ("WhatsApp", "whatsapp", "https://wa.me/",                          [("text", "\(text) \(link("whatsapp"))")]),
             ("Facebook", "facebook", "https://www.facebook.com/sharer/sharer.php", [("u", link("facebook"))]),
             ("Reddit",   "reddit",   "https://www.reddit.com/submit",           [("url", link("reddit")), ("title", text)]),
-            (L10n.menuShareEmail, "sf:envelope", "mailto:",                     [("subject", "RuSwitcher"), ("body", "\(text) \(link("email"))")]),
+            (L10n.menuShareEmail, "sf:envelope", "mailto:",                     [("subject", "SwapLayout"), ("body", "\(text) \(link("email"))")]),
         ]
         for (title, icon, base, params) in targets {
             guard let shareURL = Self.buildQueryURL(base, params) else { continue }
@@ -1507,8 +1507,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         let os = ProcessInfo.processInfo.operatingSystemVersionString
         let layouts = LayoutSwitcher.currentAndOppositeLanguage().map { "\($0.current)/\($0.opposite)" } ?? "?"
-        let subject = "RuSwitcher \(ver) — \(L10n.contactSubject)"
-        let body = "\n\n\n———\nRuSwitcher \(ver)\nmacOS \(os)\nLayouts: \(layouts)"
+        let subject = "SwapLayout \(ver) — \(L10n.contactSubject)"
+        let body = "\n\n\n———\nSwapLayout \(ver)\nmacOS \(os)\nLayouts: \(layouts)"
         if let s = Self.buildQueryURL("mailto:\(SettingsManager.contactEmail)",
                                       [("subject", subject), ("body", body)]),
            let url = URL(string: s) {

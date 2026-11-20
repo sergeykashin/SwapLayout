@@ -7,15 +7,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>RuSwitcher</string>
+	<string>SwapLayout</string>
 	<key>CFBundleExecutable</key>
-	<string>RuSwitcher</string>
+	<string>SwapLayout</string>
 	<key>CFBundleIconFile</key>
 	<string>RuSwitcher</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.ruswitcher.app</string>
+	<string>com.swaplayout.app</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLocalizations</key>
@@ -38,7 +38,7 @@
 		<string>ka</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>RuSwitcher</string>
+	<string>SwapLayout</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -58,7 +58,7 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 RuSwitcher. All rights reserved.</string>
+	<string>Copyright © 2026 SwapLayout contributors. Based on RuSwitcher (MIT).</string>
 	<key>RSDevTag</key>
 	<string></string>
 </dict>

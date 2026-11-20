@@ -4,6 +4,11 @@ import Foundation
 /// Проверяет наличие обновлений через GitHub
 @MainActor
 enum UpdateChecker {
+    /// Форк: ленту обновлений оригинала (rashn/RuSwitcher) не читаем и не ставим из неё сборки —
+    /// иначе «обновление» заменило бы форк официальным приложением. Обновление — пересборка
+    /// из исходников (см. README). Ручная проверка просто открывает релизы форка.
+    private static let feedEnabled = false
+
     // URL к JSON с информацией о версии (стабильный фид).
     private static let versionURL = "https://raw.githubusercontent.com/rashn/RuSwitcher/main/version.json"
     // Фид пред-релизов (бет). Читается ТОЛЬКО если включён бета-канал в настройках.
@@ -21,7 +26,7 @@ enum UpdateChecker {
     /// Проверить при запуске (с задержкой 5 сек, не чаще раза в сутки).
     /// Отключается через настройку `checkUpdatesEnabled`. Ручная проверка (`checkNow`) работает всегда.
     static func checkOnLaunch() {
-        guard shouldAutoCheck() else { return }
+        guard feedEnabled, shouldAutoCheck() else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             Task { await check(silent: true) }
         }
@@ -31,7 +36,7 @@ enum UpdateChecker {
     /// Тот же троттл (не чаще раза в сутки) и та же настройка `checkUpdatesEnabled`, что и на старте,
     /// поэтому долго-живущий инстанс тоже ловит новые версии, а не только при перезапуске.
     static func checkPeriodic() {
-        guard shouldAutoCheck() else { return }
+        guard feedEnabled, shouldAutoCheck() else { return }
         Task { await check(silent: true) }
     }
 
@@ -48,6 +53,10 @@ enum UpdateChecker {
 
     /// Проверить вручную (всегда показывает результат)
     static func checkNow() {
+        guard feedEnabled else {
+            if let url = URL(string: "\(SettingsManager.githubURL)/releases") { NSWorkspace.shared.open(url) }
+            return
+        }
         Task { await check(silent: false) }
     }
 
@@ -87,7 +96,8 @@ enum UpdateChecker {
     /// Текст изменений текущей беты (поле notes бета-фида) — для отдельной «витрины беты».
     /// nil, если бета-фид недоступен или без notes.
     static func fetchBetaNotes() async -> String? {
-        await fetchInfo(from: betaVersionURL)?.notes
+        guard feedEnabled else { return nil }
+        return await fetchInfo(from: betaVersionURL)?.notes
     }
 
     /// Скачивает и декодирует VersionInfo из фида. nil при сетевой ошибке или не-200

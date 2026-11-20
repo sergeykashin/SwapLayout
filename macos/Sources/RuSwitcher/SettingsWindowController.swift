@@ -772,7 +772,7 @@ final class SettingsWindowController {
         view.addSubview(icon)
 
         // Название и версия
-        let titleLabel = NSTextField(labelWithString: "RuSwitcher")
+        let titleLabel = NSTextField(labelWithString: "SwapLayout")
         titleLabel.font = .boldSystemFont(ofSize: 20)
         titleLabel.frame = NSRect(x: 108, y: y, width: 332, height: 28)
         view.addSubview(titleLabel)
@@ -1246,7 +1246,11 @@ final class SettingsWindowController {
 
     @objc private func openContact() {
         let email = SettingsManager.shared.contactEmail
-        let subject = "RuSwitcher Feedback"
+        guard !email.isEmpty else {
+            if let url = URL(string: "\(SettingsManager.githubURL)/issues") { NSWorkspace.shared.open(url) }
+            return
+        }
+        let subject = "SwapLayout Feedback"
         if let url = URL(string: "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? subject)") {
             NSWorkspace.shared.open(url)
         }
@@ -1278,7 +1282,7 @@ final class SettingsWindowController {
         let url = URL(fileURLWithPath: path)
         if let service = NSSharingService(named: .composeEmail) {
             service.perform(withItems: [
-                "RuSwitcher debug log" as NSString,
+                "SwapLayout debug log" as NSString,
                 url
             ])
         } else {

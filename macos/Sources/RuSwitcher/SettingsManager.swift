@@ -487,12 +487,12 @@ final class SettingsManager: @unchecked Sendable {
         autoConvert || fixTwoCaps || fixTypos || !abbreviations.isEmpty
     }
 
-    var donateURL: String { "https://boosty.to/ruswitcher" }
-    var contactEmail: String { "xrashid@gmail.com" }
+    var donateURL: String { SettingsManager.githubURL }   // форк: без доната, ведёт на репозиторий
+    var contactEmail: String { "" }   // форк: пусто → Issues форка
 
     // MARK: - GitHub coordinates (единственный источник — чтобы при переименовании
     // репозитория правка была в одном месте)
-    static let githubOwner = "rashn"
+    static let githubOwner = "sergeykashin"
     static let githubRepo = "RuSwitcher"
     static var githubURL: String { "https://github.com/\(githubOwner)/\(githubRepo)" }
     /// Сайт проекта. Правило то же, по которому сайт сам выбирает язык по системе: русский,
@@ -506,6 +506,8 @@ final class SettingsManager: @unchecked Sendable {
     /// по ссылке, которую человек открыл сам, — программа по-прежнему ничего не отправляет.
     /// URL собирается из константы, а не из сетевого фида (апдейтер фиду не доверяет).
     static func websiteLink(_ page: String = "", source: String = "app", medium: String) -> URL? {
+        // Форк: своего сайта и UTM-меток нет — все «ссылки на сайт» ведут на репозиторий форка.
+        if true { return URL(string: githubURL) }
         let region = Locale.current.region?.identifier ?? ""
         let russian = russianSiteLanguages.contains(L10n.languageCode) || cisRegions.contains(region)
         var comps = URLComponents(string: websiteURL + (russian ? "/" : "/en/") + (page.isEmpty ? "" : page + "/"))
@@ -515,10 +517,10 @@ final class SettingsManager: @unchecked Sendable {
     }
     /// Email для «Связаться с разработчиком» (mailto с предзаполнением). Пусто → кнопка
     /// открывает GitHub Issues как фолбэк.
-    static let contactEmail = "r@nasibulin.ru"
+    static let contactEmail = ""
     /// Telegram-чат поддержки (t.me/…). Пусто → пункт меню скрыт. Инвайт-ссылка группы
     /// обсуждения канала @RuSwitcher (её можно отозвать в настройках группы — тогда обновить).
-    static let telegramChatURL = "https://t.me/+rmD9Dc8USZlkYjEy"
+    static let telegramChatURL = ""
     /// Team ID (Apple Developer), которым подписаны релизы. Используется для
     /// пиннинга подписи при авто-обновлении.
     static let developerTeamID = "9GEWCZ59HK"
