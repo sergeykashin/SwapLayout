@@ -92,9 +92,20 @@ After you switch layout, SwapLayout can briefly show the layout flag **right nex
 - **Minimal footprint** — no Electron, no web views, pure Swift + AppKit.
 - **No telemetry** — your keystrokes stay on your Mac.
 
+### Download
+
+Get **`SwapLayout-arm64.zip`** from the [Releases page of this fork](https://github.com/sergeykashin/RuSwitcher/releases/latest). Apple Silicon only (arm64), macOS 13+.
+
+1. Unzip and move `SwapLayout.app` to `/Applications`.
+2. The build is **ad-hoc signed and not notarized**, so Gatekeeper blocks the first launch. Either run `xattr -dr com.apple.quarantine /Applications/SwapLayout.app`, or open *System Settings → Privacy & Security* and click *Open Anyway*.
+3. Grant **Accessibility** and **Input Monitoring** when asked (and again after every update — the ad-hoc signature changes).
+4. Quit the original RuSwitcher first — two event taps conflict.
+
+The official app is published only by the original project (see its [website and Releases](https://github.com/rashn/RuSwitcher/releases)) — **do not use the official Homebrew cask or DMG if you want this fork's behaviour**, they install the original build.
+
 ### Installation
 
-There are no prebuilt binaries for this fork. The official app is published only by the original project (see its [website and Releases](https://github.com/rashn/RuSwitcher/releases)) — **do not use the official Homebrew cask or DMG if you want this fork's behaviour**, they install the original build.
+Building from source instead:
 
 **Build from source (for macOS)**
 
@@ -237,9 +248,20 @@ SwapLayout работает через **Apple Screen Sharing**. Печатае�
 - **Минимальное потребление** — без Electron и веб-вьюх, чистый Swift + AppKit.
 - **Без телеметрии** — ваши нажатия остаются на вашем Mac.
 
+### Скачать
+
+Скачайте **`SwapLayout-arm64.zip`** на [странице Releases этого форка](https://github.com/sergeykashin/RuSwitcher/releases/latest). Только Apple Silicon (arm64), macOS 13+.
+
+1. Распакуйте и перенесите `SwapLayout.app` в `/Applications`.
+2. Сборка подписана **ad-hoc и не нотаризована**, поэтому Gatekeeper заблокирует первый запуск. Выполните `xattr -dr com.apple.quarantine /Applications/SwapLayout.app` либо откройте *Системные настройки → Конфиденциальность и безопасность* и нажмите *Всё равно открыть*.
+3. Выдайте **Универсальный доступ** и **Мониторинг ввода** по запросу (и заново после каждого обновления: ad-hoc подпись меняется).
+4. Закройте оригинальный RuSwitcher: два event tap конфликтуют.
+
+Официальное приложение выпускает только оригинальный проект (см. его [сайт и Releases](https://github.com/rashn/RuSwitcher/releases)) — **не ставьте официальный Homebrew-cask или DMG, если нужно поведение форка**: они установят оригинальную сборку.
+
 ### Установка
 
-Готовых сборок у этого форка нет. Официальное приложение выпускает только оригинальный проект (см. его [сайт и Releases](https://github.com/rashn/RuSwitcher/releases)) — **не ставьте официальный Homebrew-cask или DMG, если нужно поведение форка**: они установят оригинальную сборку.
+Или соберите из исходников:
 
 **Сборка из исходников**
 
